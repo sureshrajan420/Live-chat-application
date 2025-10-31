@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chat App</title>
+<style>
+  /* Blue and black theme */
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212;
+    color: #e0e0e0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #login-container, #app {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Login Container */
+  #login-container {
+    background-color: #1a1a1a;
+    flex-direction: column;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 320px;
+    box-shadow: 0 0 10px #1976d2;
+  }
+  #login-container h2 {
+    margin-bottom: 1rem;
+    color: #64b5f6;
+  }
+  #login-container input {
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 10px;
+    border-radius: 4px;
+    border: none;
+    background: #222;
+    color: #eee;
+  }
+  #login-container button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 0.5rem;
+    border: none;
+    border-radius: 4px;
+    background-color: #1976d2;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  #login-container button:hover {
+    background-color: #1565c0;
+  }
+  #login-error {
+    color: #f44336;
+    margin-bottom: 1rem;
+    min-height: 1.2rem;
+  }
+
+  /* App container */
+  #app {
+    display: flex;
+    height: 100vh;
+    background-color: #121212;
+  }
+  
+  /* Sidebar for users and groups */
+  #sidebar {
+    width: 280px;
+    background-color: #1f1f1f;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #333;
+  }
+
+  /* Tabs for Users and Groups */
+  #tabs {
+    display: flex;
+  }
+  #tabs button {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #64b5f6;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  #tabs button.active {
+    border-bottom: 2px solid #1976d2;
+    background-color: #121212;
+  }
+
+  /* User list and group list styling */
+  #user-list, #group-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+  }
+  .user-item, .group-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  .user-item.active, .group-item.active {
+    background-color: #1565c0;
+  }
+  .user-item:hover, .group-item:hover {
+    background-color: #0d47a1;
+  }
+
+  /* Avatar */
+  .user-avatar, .group-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #1976d2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+    margin-right: 12px;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  /* Online dot */
+  .user-online-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    background-color: #4caf50;
+    border: 2px solid #121212;
+    border-radius: 50%;
+  }
+
+  /* Info */
+  .user-info, .group-info {
+    flex: 1;
+  }
+  .user-name, .group-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #e0e0e0;
+  }
+  .group-subtitle {
+    font-size: 0.8rem;
+    color: #90caf9;
+  }
+
+  /* Create Group button */
+  #create-group-btn {
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  #create-group-btn:hover {
+    background-color: #1565c0;
+  }
+
+  /* Chat container */
+  #chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #121212;
+  }
+
+  /* Chat header */
+  #chat-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid #333;
+    background-color: #1f1f1f;
+  }
+  #chat-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: #1976d2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  #chat-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #e0e0e0;
+    flex: 1;
+  }
+  #logout-btn {
+    background: none;
+    border: none;
+    color: #64b5f6;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  #logout-btn:hover {
+    color: #2196f3;
+  }
+
+  /* Chat window */
+  #chat-window {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    background-color: #181818;
+  }
+  .message {
+    max-width: 75%;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    border-radius: 16px;
+    position: relative;
+    font-size: 1rem;
+    line-height: 1.3;
+    word-wrap: break-word;
+  }
+  .message.you {
+    margin-left: auto;
+    background-color: #2196f3;
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .message.other {
+    background-color: #333;
+    color: #e0e0e0;
+    border-bottom-left-radius: 4px;
+  }
+  .sender-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+    color: #90caf9;
+  }
+  .time {
+    font-size: 0.7rem;
+    color: #bbb;
+    position: absolute;
+    bottom: 4px;
+    right: 8px;
+  }
+
+  /* Input bar */
+  #input-bar {
+    display: flex;
+    padding: 10px 16px;
+    background-color: #1f1f1f;
+  }
+  #message-input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 24px;
+    border: none;
+    font-size: 1rem;
+    outline: none;
+    background-color: #333;
+    color: #eee;
+  }
+  #send-btn {
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    margin-left: 10px;
+    padding: 0 20px;
+    border-radius: 24px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  #send-btn:disabled {
+    background-color: #555;
+    cursor: default;
+  }
+  #send-btn:hover:not(:disabled) {
+    background-color: #1565c0;
+  }
+
+  /* Modal for group password */
+  #modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right:0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+  #modal {
+    background-color: #1a1a1a;
+    padding: 20px 30px;
+    border-radius: 8px;
+    max-width: 320px;
+    width: 100%;
+    box-shadow: 0 0 15px #2196f3;
+    color: #eee;
+  }
+  #modal h3 {
+    margin-top: 0;
+    color: #64b5f6;
+  }
+  #modal input {
+    width: 100%;
+    margin: 15px 0;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    background-color: #333;
+    color: #eee;
+  }
+  #modal button {
+    background-color: #1976d2;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    margin-right: 10px;
+  }
+  #modal button:hover {
+    background-color: #1565c0;
+  }
+  #modal button.cancel {
+    background-color: #555;
+  }
+  #modal button.cancel:hover {
+    background-color: #444;
+  }
+
+  /* Responsive */
+  @media (max-width: 720px) {
+    #app {
+      flex-direction: column;
+    }
+    #sidebar {
+      width: 100%;
+      height: 200px;
+      border-right: none;
+      border-bottom: 1px solid #333;
+    }
+    #chat-container {
+      height: calc(100vh - 200px);
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login UI -->
+<div id="login-container">
+  <h2>Login / Register</h2>
+  <input id="email" type="email" placeholder="Email" autocomplete="username" />
+  <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
+  <div id="login-error"></div>
+  <button id="login-btn">Login</button>
+  <button id="register-btn">Register</button>
+</div>
+
+<!-- Main App -->
+<div id="app" style="display:none;">
+  <div id="sidebar">
+    <div id="tabs">
+      <button id="users-tab" class="active">Users</button>
+      <button id="groups-tab">Groups</button>
+    </div>
+    <div id="user-list"></div>
+    <div id="group-list" style="display:none;"></div>
+    <button id="create-group-btn">Create Group</button>
+  </div>
+  <div id="chat-container">
+    <div id="chat-header">
+      <div id="chat-avatar"></div>
+      <div id="chat-title">Select user or group</div>
+      <button id="logout-btn">Logout</button>
+    </div>
+    <div id="chat-window">Select a user or group to start chatting</div>
+    <div id="input-bar">
+      <input id="message-input" placeholder="Type a message..." disabled />
+      <button id="send-btn" disabled>Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for entering group password -->
+<div id="modal-backdrop">
+  <div id="modal">
+    <h3 id="modal-title">Enter group password</h3>
+    <input id="modal-password" type="password" placeholder="Group password" />
+    <div style="text-align:right;">
+      <button id="modal-ok-btn">OK</button>
+      <button id="modal-cancel-btn" class="cancel">Cancel</button>
+    </div>
+    <div id="modal-error" style="color:#f44336; margin-top:8px; min-height:1.2rem;"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+  import {
+    getFirestore, collection, doc, setDoc, getDoc, getDocs,
+    query, where, onSnapshot, addDoc, orderBy, updateDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+    createUserWithEmailAndPassword, signOut
+  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+  // Firebase config - Replace with your own config!
+ const firebaseConfig = {
+    apiKey: "AIzaSyAu3mJ-VSwhRcPhfwktEL2YxZ6UWeMOskM",
+    authDomain: "livechat-93ef5.firebaseapp.com",
+    projectId: "livechat-93ef5",
+    storageBucket: "livechat-93ef5.firebasestorage.app",
+    messagingSenderId: "995736765937",
+    appId: "1:995736765937:web:90fc27909d25fc44d9f050",
+    measurementId: "G-MXQHQ71MCJ"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Elements
+  const loginContainer = document.getElementById("login-container");
+  const loginError = document.getElementById("login-error");
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  const loginBtn = document.getElementById("login-btn");
+  const registerBtn = document.getElementById("register-btn");
+
+  const appContainer = document.getElementById("app");
+  const userListEl = document.getElementById("user-list");
+  const groupListEl = document.getElementById("group-list");
+  const usersTabBtn = document.getElementById("users-tab");
+  const groupsTabBtn = document.getElementById("groups-tab");
+  const createGroupBtn = document.getElementById("create-group-btn");
+
+  const chatWindow = document.getElementById("chat-window");
+  const chatTitle = document.getElementById("chat-title");
+  const chatAvatar = document.getElementById("chat-avatar");
+  const messageInput = document.getElementById("message-input");
+  const sendBtn = document.getElementById("send-btn");
+  const logoutBtn = document.getElementById("logout-btn");
+
+  const modalBackdrop = document.getElementById("modal-backdrop");
+  const modalTitle = document.getElementById("modal-title");
+  const modalPasswordInput = document.getElementById("modal-password");
+  const modalOkBtn = document.getElementById("modal-ok-btn");
+  const modalCancelBtn = document.getElementById("modal-cancel-btn");
+  const modalError = document.getElementById("modal-error");
+
+  let currentUser = null;
+  let selectedChat = null; // {type: 'user'|'group', id, name}
+  let unsubscribeMessages = null;
+  let joinGroupCallback = null;
+
+  // Login & Register Handlers
+  loginBtn.addEventListener("click", async () => {
+    loginError.textContent = "";
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!email || !password) {
+      loginError.textContent = "Email and password required.";
+      return;
+    }
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      loginError.textContent = error.message;
+    }
+  });
+
+  registerBtn.addEventListener("click", async () => {
+    loginError.textContent = "";
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    if (!email || !password) {
+      loginError.textContent = "Email and password required.";
+      return;
+    }
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        email: email,
+        displayName: email.split("@")[0],
+        online: true,
+        lastActive: serverTimestamp()
+      });
+    } catch (error) {
+      loginError.textContent = error.message;
+    }
+  });
+
+  // Logout
+  logoutBtn.addEventListener("click", async () => {
+    if (currentUser) {
+      await updateDoc(doc(db, "users", currentUser.uid), { online: false, lastActive: serverTimestamp() });
+      await signOut(auth);
+    }
+  });
+
+  // Auth state change
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      loginContainer.style.display = "none";
+      appContainer.style.display = "flex";
+
+      // Update user online status
+      try {
+        await updateDoc(doc(db, "users", user.uid), { online: true, lastActive: serverTimestamp() });
+      } catch {
+        await setDoc(doc(db, "users", user.uid), {
+          email: user.email,
+          displayName: user.email.split("@")[0],
+          online: true,
+          lastActive: serverTimestamp()
+        });
+      }
+
+      loadUserList();
+      loadGroupList();
+    } else {
+      currentUser = null;
+      appContainer.style.display = "none";
+      loginContainer.style.display = "flex";
+      selectedChat = null;
+      chatTitle.textContent = "Select user or group";
+      chatAvatar.textContent = "";
+      chatWindow.textContent = "Select a user or group to start chatting";
+      messageInput.disabled = true;
+      sendBtn.disabled = true;
+    }
+  });
+
+  // Load all users except current user
+  function loadUserList() {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef);
+    onSnapshot(q, (snapshot) => {
+      userListEl.innerHTML = "";
+      snapshot.docs.forEach(docSnap => {
+        if (docSnap.id === currentUser.uid) return;
+        const userData = docSnap.data();
+        const userItem = document.createElement("div");
+        userItem.className = "user-item";
+        userItem.dataset.userid = docSnap.id;
+
+        // Avatar with online dot
+        const avatar = document.createElement("div");
+        avatar.className = "user-avatar";
+        avatar.textContent = userData.displayName ? userData.displayName[0].toUpperCase() : "?";
+        if (userData.online) {
+          const onlineDot = document.createElement("div");
+          onlineDot.className = "user-online-dot";
+          avatar.appendChild(onlineDot);
+        }
+        userItem.appendChild(avatar);
+
+        // User info
+        const info = document.createElement("div");
+        info.className = "user-info";
+        const name = document.createElement("div");
+        name.className = "user-name";
+        name.textContent = userData.displayName || userData.email;
+        info.appendChild(name);
+        userItem.appendChild(info);
+
+        userItem.addEventListener("click", () => {
+          selectChat({ type: "user", id: docSnap.id, name: userData.displayName || userData.email });
+          setActiveItem(userItem, userListEl);
+          clearActiveItem(groupListEl);
+        });
+
+        userListEl.appendChild(userItem);
+      });
+    });
+  }
+
+  // Load groups from Firestore
+  function loadGroupList() {
+    const groupsRef = collection(db, "groups");
+    const q = query(groupsRef);
+    onSnapshot(q, (snapshot) => {
+      groupListEl.innerHTML = "";
+      snapshot.docs.forEach(docSnap => {
+        const groupData = docSnap.data();
+        const groupItem = document.createElement("div");
+        groupItem.className = "group-item";
+        groupItem.dataset.groupid = docSnap.id;
+
+        const avatar = document.createElement("div");
+        avatar.className = "group-avatar";
+        avatar.textContent = groupData.name ? groupData.name[0].toUpperCase() : "#";
+        groupItem.appendChild(avatar);
+
+        const info = document.createElement("div");
+        info.className = "group-info";
+        const name = document.createElement("div");
+        name.className = "group-name";
+        name.textContent = groupData.name;
+        info.appendChild(name);
+
+        const subtitle = document.createElement("div");
+        subtitle.className = "group-subtitle";
+        subtitle.textContent = `Members: ${groupData.members?.length || 0}`;
+        info.appendChild(subtitle);
+
+        groupItem.appendChild(info);
+
+        groupItem.addEventListener("click", () => {
+          // When group selected, require password prompt if not member
+          if (!groupData.members || !groupData.members.includes(currentUser.uid)) {
+            openGroupPasswordModal(docSnap.id, groupData.name, groupData.password);
+          } else {
+            selectChat({ type: "group", id: docSnap.id, name: groupData.name });
+            setActiveItem(groupItem, groupListEl);
+            clearActiveItem(userListEl);
+          }
+        });
+
+        groupListEl.appendChild(groupItem);
+      });
+    });
+  }
+
+  // Modal logic for group password
+  function openGroupPasswordModal(groupId, groupName, groupPassword) {
+    modalTitle.textContent = `Enter password to join "${groupName}"`;
+    modalPasswordInput.value = "";
+    modalError.textContent = "";
+    modalBackdrop.style.display = "flex";
+
+    joinGroupCallback = async () => {
+      const inputPassword = modalPasswordInput.value;
+      if (inputPassword === groupPassword) {
+        // Add user to group members
+        const groupRef = doc(db, "groups", groupId);
+        const groupSnap = await getDoc(groupRef);
+        if (!groupSnap.exists()) {
+          modalError.textContent = "Group no longer exists.";
+          return;
+        }
+        let members = groupSnap.data().members || [];
+        if (!members.includes(currentUser.uid)) {
+          members.push(currentUser.uid);
+          await updateDoc(groupRef, { members });
+        }
+        modalBackdrop.style.display = "none";
+        selectChat({ type: "group", id: groupId, name: groupName });
+        // Highlight selected group in UI
+        [...groupListEl.children].forEach(item => {
+          item.classList.toggle("active", item.dataset.groupid === groupId);
+        });
+        clearActiveItem(userListEl);
+      } else {
+        modalError.textContent = "Incorrect password.";
+      }
+    };
+  }
+  modalOkBtn.addEventListener("click", () => {
+    if (joinGroupCallback) joinGroupCallback();
+  });
+  modalCancelBtn.addEventListener("click", () => {
+    modalBackdrop.style.display = "none";
+    modalError.textContent = "";
+  });
+
+  // Select Chat (user or group)
+  function selectChat(chat) {
+    if (unsubscribeMessages) unsubscribeMessages();
+    selectedChat = chat;
+    chatTitle.textContent = chat.name;
+    chatAvatar.textContent = chat.name[0].toUpperCase();
+    chatWindow.innerHTML = "";
+    messageInput.disabled = false;
+    sendBtn.disabled = false;
+
+    if (chat.type === "user") {
+      // Private chat - messages under collection "privateChats/{chatId}/messages"
+      const chatId = [currentUser.uid, chat.id].sort().join("_");
+      const messagesRef = collection(db, "privateChats", chatId, "messages");
+      const q = query(messagesRef, orderBy("timestamp", "asc"));
+
+      unsubscribeMessages = onSnapshot(q, (snapshot) => {
+        chatWindow.innerHTML = "";
+        snapshot.docs.forEach(docSnap => {
+          const msg = docSnap.data();
+          appendMessage(msg);
+        });
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      });
+
+      sendBtn.onclick = async () => {
+        const text = messageInput.value.trim();
+        if (!text) return;
+        await addDoc(messagesRef, {
+          senderId: currentUser.uid,
+          text,
+          timestamp: serverTimestamp()
+        });
+        messageInput.value = "";
+      };
+    } else if (chat.type === "group") {
+      // Group chat - messages under "groups/{groupId}/messages"
+      const messagesRef = collection(db, "groups", chat.id, "messages");
+      const q = query(messagesRef, orderBy("timestamp", "asc"));
+
+      unsubscribeMessages = onSnapshot(q, (snapshot) => {
+        chatWindow.innerHTML = "";
+        snapshot.docs.forEach(docSnap => {
+          const msg = docSnap.data();
+          appendMessage(msg);
+        });
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      });
+
+      sendBtn.onclick = async () => {
+        const text = messageInput.value.trim();
+        if (!text) return;
+        await addDoc(messagesRef, {
+          senderId: currentUser.uid,
+          text,
+          timestamp: serverTimestamp()
+        });
+        messageInput.value = "";
+      };
+    }
+  }
+
+  // Append message to chat window
+  async function appendMessage(msg) {
+    const messageEl = document.createElement("div");
+    messageEl.className = "message";
+    messageEl.classList.add(msg.senderId === currentUser.uid ? "you" : "other");
+
+    // For group chats, show sender name
+    if (selectedChat.type === "group" && msg.senderId !== currentUser.uid) {
+      const senderDoc = await getDoc(doc(db, "users", msg.senderId));
+      const senderName = senderDoc.exists() ? senderDoc.data().displayName || senderDoc.data().email : "Unknown";
+      const senderEl = document.createElement("div");
+      senderEl.className = "sender-name";
+      senderEl.textContent = senderName;
+      messageEl.appendChild(senderEl);
+    }
+
+    const textEl = document.createElement("div");
+    textEl.textContent = msg.text;
+    messageEl.appendChild(textEl);
+
+    const timeEl = document.createElement("div");
+    timeEl.className = "time";
+    if (msg.timestamp && msg.timestamp.toDate) {
+      const date = msg.timestamp.toDate();
+      timeEl.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else {
+      timeEl.textContent = "";
+    }
+    messageEl.appendChild(timeEl);
+
+    chatWindow.appendChild(messageEl);
+  }
+
+  // Utility to set active class on clicked item
+  function setActiveItem(item, container) {
+    [...container.children].forEach(child => child.classList.remove("active"));
+    item.classList.add("active");
+  }
+  function clearActiveItem(container) {
+    [...container.children].forEach(child => child.classList.remove("active"));
+  }
+
+  // Tabs switching
+  usersTabBtn.addEventListener("click", () => {
+    usersTabBtn.classList.add("active");
+    groupsTabBtn.classList.remove("active");
+    userListEl.style.display = "block";
+    groupListEl.style.display = "none";
+  });
+  groupsTabBtn.addEventListener("click", () => {
+    groupsTabBtn.classList.add("active");
+    usersTabBtn.classList.remove("active");
+    groupListEl.style.display = "block";
+    userListEl.style.display = "none";
+  });
+
+  // Create group
+  createGroupBtn.addEventListener("click", () => {
+    const groupName = prompt("Enter group name:");
+    if (!groupName) return alert("Group name is required.");
+    const groupPassword = prompt("Set a group password (required for joining):");
+    if (!groupPassword) return alert("Group password is required.");
+
+    const groupsRef = collection(db, "groups");
+    addDoc(groupsRef, {
+      name: groupName,
+      password: groupPassword,
+      members: [currentUser.uid],
+      createdAt: serverTimestamp()
+    }).then(() => {
+      alert(`Group "${groupName}" created successfully!`);
+    }).catch(err => {
+      alert("Error creating group: " + err.message);
+    });
+  });
+
+</script>
+</body>
+</html>
